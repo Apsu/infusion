@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
-import functools
-import itertools
-
+from infusion import Paths, Quality
 
 
 # ANSI color enum
@@ -19,173 +17,10 @@ class Color:
     term = '\033[0m'       # Terminator
 
 
-# Item quality enum
-class Quality:
-    rare = 1
-    legendary = 2
-    exotic = 3
-
-
 def printc(string, color=Color.white):
     """Print string with ANSI color escape codes"""
 
     print("{}{}{}".format(color, string, Color.term))
-
-
-class Path():
-    """Path wrapper to store light/cost/path properties"""
-
-    # Legendary Mark cost per infusion
-    COST = 3
-
-    def __init__(self, item, path):
-        self.item = item
-        self.items = path
-        self.cost = (len(path) - 1) * COST
-
-    def __repr__(self):
-        return self.item
-
-
-#@functools.total_ordering
-class Item():
-    """Item wrapper to store light/quality properties"""
-
-    def __init__(self, item, quality=None):
-        """Extract light value and quality flag"""
-
-        # Shortcut if quality flag is provided to streamline objects
-        if quality is not None:
-            self.quality = quality
-            self.light = item
-            return
-
-        # Quality flag is based on '+' or '-' prefix or none
-        if item[0] == '+':
-            self.quality = Quality.exotic
-        elif item[0] == '-':
-            self.quality = Quality.rare
-        else:
-            self.quality = Quality.legendary
-
-        # Make sure light is an integer
-        try:
-            # Light is rest of string if quality provided, else whole string
-            self.light = int(item[1:]
-                             if self.quality is not Quality.legendary
-                             else item)
-        except:
-            # Complain and bail
-            printc('Error parsing "{}". Item format '
-                   'must be: "[+]integer"'.format(item), Color.red)
-            exit(2)
-
-#    # Handle operators for Items or ints
-#    def __sub__(self, other):
-#        return Item(self.light - (other.light if hasattr(other, 'light')
-#                    else other), self.quality)
-#
-#    def __add__(self, other):
-#        return Item(self.light + (other.light if hasattr(other, 'light')
-#                    else other), self.quality)
-#
-#    def __mul__(self, other):
-#        return Item(self.light * (other.light if hasattr(other, 'light')
-#                    else other), self.quality)
-#
-#    def __lt__(self, other):
-#        return self.light < (other.light if hasattr(other, 'light')
-#                             else other)
-#
-#    def __eq__(self, other):
-#        return self.light == (other.light if hasattr(other, 'light')
-#                              else other)
-#
-#    # Can round the value too!
-#    def __round__(self):
-#        return Item(round(self.light), self.quality)
-#
-#    # Treat Item like light of item by default
-#    def __repr__(self):
-#        return self.light
-#
-#    def __str__(self):
-#        return str(self.light)
-
-
-def permutate(low, mid, high):
-    """
-    Calculate permutations
-
-    <- low:1, mid: 2 3, high:5
-    1 5
-    1 2 5
-    1 3 5
-    1 2 3 5
-    """
-
-    # Initialize permutations
-    perms = [[low, high]]
-
-    # For each sublist of middle values
-    for l in range(1, len(mid) + 1):
-        # For each permutation of sublist
-        for perm in itertools.combinations(mid, l):
-            # Store [low, permutation, high] list
-            perms.append(list(itertools.chain([low], perm, [high])))
-
-    return perms
-
-
-def infuse(base, target):
-    """
-    Infuse base item with target item
-
-    exotic <- !exotic: <= 4 or 70%
-      290 <- 298 = 296
-      296 <- 300 = 300
-      290 <- 295 = 294
-    exotic <- exotic: <= 5 or 70%
-      300 <- 310 = 307
-      290 <- 310 = 304
-    !exotic <- !exotic: <= 6 or 80%
-      294 <- 300 = 300
-      290 <- 295 = 295
-    !exotic <- exotic: <= 7 or 80%
-      299 <- 310 = 308
-      293 <- 300 = 300
-      298 <- 310 = 308
-      303 <- 310 = 309???
-    """
-
-    # Store difference in item light
-    diff = target.light - base.light
-
-    # Calculate close light range
-    comp = (6 -
-            (2 if base.quality is Quality.exotic else 0) +
-            (1 if target.quality is Quality.exotic else 0))
-
-    # Calculate far light percentage
-    perc = 0.7 if base.quality is Quality.exotic else 0.8
-
-    if diff <= comp:
-        # No penalty, just return target light
-        return target
-    # Otherwise assess penalty
-    else:
-        # Resulting light is calculated percentage of the difference
-        return Item(base.light + round(diff * perc), base.quality)
-
-
-def walk(items):
-    """Walk an infusion path"""
-
-    # Store path reduction by chaining infusions
-    result = functools.reduce(infuse, items)
-
-    # Send it back with the step cost
-    return Path(result, items)
 
 
 def render(item):
@@ -202,87 +37,48 @@ def render(item):
 
     return "{}{}{}".format(color, item, Color.term)
 
-def bests(paths):
-    """Calculate best light/least marks and least marks/best light"""
-
-    # Initialize bests with first path
-    best_light = least_marks = paths[0]
-
-    # For each path
-    for path in paths:
-        # Extract parts
-        item, marks, steps = path
-
-        # If light is best we've seen, or same light but least marks
-        if (item.light > light_marks[0].light or
-                (item.light == light_marks[0].light and marks < light_marks[1])):
-            # Store it
-            light_marks = (light, marks, steps)
-
-        # If marks is least we've seen, or same marks but best light
-        if (marks < marks_light[1] or
-                (marks == marks_light[1] and light > marks_light[0])):
-            # Store it
-            marks_light = (light, marks, steps)
-
-    pass
-
-def least_cost(paths):
-    pass
-
 
 def calculate(args):
     """Calculate infusion paths"""
 
-    # Store base item
-    low = Item(args.base)
-
-    # Get unique sorted list of Items, tossing items < base
-    items = [item for item in sorted(map(Item, set(args.items)))
-             if item.light > low.light]
-
-    # Bail if base is the highest light item provided
-    if len(items) == 0:
-        printc('No items with more light than base. Nothing to do!', Color.red)
+    # Initialize paths
+    try:
+        paths = Paths(args.base, args.items)
+    except Exception as e:
+        printc("Error initializing paths: {}".format(e), Color.red)
         exit(2)
-
-    # Store highest and inbetween items
-    high = items[-1]
-    mid = items[:-1]
 
     printc("Possible infusion paths", Color.green)
 
-    # Get permutations
-    perms = permutate(low, mid, high)
-
-    # Walk each path and store results, sorted by light result
-    paths = sorted([walk(perm)
-                   for perm in perms], key=lambda path: path.item.light)
-
-    # Initialize best light/least marks and least marks/best light
-    light_marks = marks_light = paths[0]
-
     # Collect results
-    for path in paths:
+    for path in paths.paths:
         # Print each possible path
         printc('Light: {}, Marks: {}, Infusion: {}'.format(
-            render(light), render(marks), ' <- '.join(map(render, steps))),
+            render(path.item),
+            render(path.cost),
+            ' <- '.join(map(render, path.steps))),
             Color.white)
 
+    # Get bests
+    best_light = paths.best_light
+    least_cost = paths.least_cost
+
     # Show best light, but least marks
-    light, marks, steps = light_marks
     print()
     printc('Best light with least marks', Color.green)
     printc('Light: {}, Marks: {}, Infusion: {}'.format(
-        render(light), render(marks), ' <- '.join(map(render, steps))),
+        render(best_light.item),
+        render(best_light.cost),
+        ' <- '.join(map(render, best_light.steps))),
         Color.white)
 
     # Show least marks, but best light
-    light, marks, steps = marks_light
     print()
     printc('Least marks with best light', Color.green)
     printc('Light: {}, Marks: {}, Infusion: {}'.format(
-        render(light), render(marks), ' <- '.join(map(render, steps))),
+        render(least_cost.item),
+        render(least_cost.cost),
+        ' <- '.join(map(render, least_cost.steps))),
         Color.white)
 
 # Entry point
