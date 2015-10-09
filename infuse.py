@@ -32,7 +32,7 @@ def render(item):
         color = Color.cyan
     elif item.quality is Quality.exotic:
         color = Color.yellow
-    elif item.quality is Quality.legendary:
+    else:  # item.quality is Quality.legendary
         color = Color.purple
 
     return "{}{}{}".format(color, item, Color.term)
@@ -50,7 +50,7 @@ def calculate(args):
 
     printc("Possible infusion paths", Color.green)
 
-    # Collect results
+    # Iterate over results
     for path in paths.paths:
         # Print each possible path
         printc('Light: {}, Marks: {}, Infusion: {}'.format(

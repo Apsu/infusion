@@ -125,27 +125,24 @@ class Paths():
         self.paths = sorted([Path(perm) for perm in perms],
                             key=lambda path: path.light)
 
-        # Initialize bests with first path
-        best_light = least_cost = self.paths[0]
+        # Initialize best-light/least-cost with first path
+        self.best_light = self.least_cost = self.paths[0]
 
         # For each path
         for path in self.paths:
             # If light is best we've seen, or same light but least cost
-            if (path.light > best_light.light or
-                    (path.light == best_light.light and
-                     path.cost < best_light.cost)):
+            if (path.light > self.best_light.light or
+                    (path.light == self.best_light.light and
+                     path.cost < self.best_light.cost)):
                 # Store it
-                best_light = path
+                self.best_light = path
 
             # If cost is least we've seen, or same cost but best light
-            if (path.cost < least_cost.cost or
-                    (path.cost == least_cost.cost and
-                     path.light > least_cost.light)):
+            if (path.cost < self.least_cost.cost or
+                    (path.cost == self.least_cost.cost and
+                     path.light > self.least_cost.light)):
                 # Store it
-                least_cost = path
-
-        self.best_light = best_light
-        self.least_cost = least_cost
+                self.least_cost = path
 
     # Class functions
     def uniquify(base, items):
