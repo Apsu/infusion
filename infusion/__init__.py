@@ -36,8 +36,9 @@ class Item():
                              if self.quality is not Quality.legendary
                              else item)
         # If item is not an integer
-        except ValueError:
-            raise
+        except ValueError as e:
+            raise Exception("Invalid item {}; items must be integers.".format(
+                str(e).split()[-1]))
 
     def __repr__(self):
         return self.light
