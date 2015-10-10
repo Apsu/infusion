@@ -86,8 +86,8 @@ class Path():
         perc = 0.7 if base.quality is Quality.exotic else 0.8
 
         if diff <= comp:
-            # No penalty, just return target light
-            return target
+            # No penalty, result is target light
+            return Item(target.light, base.quality)
         # Otherwise assess penalty
         else:
             # Resulting light is calculated percentage of the difference
