@@ -112,8 +112,8 @@ class Paths():
         # Store base item
         self.base = Item(base)
 
-        # Get unique list of items to consider
-        self.items = Paths.uniquify(self.base, items)
+        # Get pruned list of items to consider
+        self.items = Paths.prune(self.base, items)
 
         # Store target and inbetween items
         self.target = self.items[-1]
@@ -146,18 +146,18 @@ class Paths():
                 self.least_cost = path
 
     # Class functions
-    def uniquify(base, items):
-        """Get unique sorted list of Items, tossing items < base"""
+    def prune(base, items):
+        """Get sorted list of Items, tossing items < base"""
 
-        unique = [item for item in sorted(map(Item, set(items)),
+        pruned = [item for item in sorted(map(Item, items),
                                           key=lambda item: item.light)
                   if item.light > base.light]
 
         # Bail if base is the highest light item provided
-        if len(unique) == 0:
+        if len(pruned) == 0:
             raise Exception("Base item is highest light level")
 
-        return unique
+        return pruned
 
     def permutate(low, mid, high):
         """
