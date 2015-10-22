@@ -55,32 +55,13 @@ class Path():
 
     # Class function
     def infuse(base, target):
-        """
-        Infuse base item with target item
-
-        exotic <- !exotic: <= 4 or 70%
-          290 <- 298 = 296
-          296 <- 300 = 300
-          290 <- 295 = 294
-        exotic <- exotic: <= 5 or 70%
-          300 <- 310 = 307
-          290 <- 310 = 304
-        !exotic <- !exotic: <= 6 or 80%
-          294 <- 300 = 300
-          290 <- 295 = 295
-        !exotic <- exotic: <= 7 or 80%
-          299 <- 310 = 308
-          293 <- 300 = 300
-          298 <- 310 = 308
-        """
+        """Infuse base item with target item"""
 
         # Store difference in item light
         diff = target.light - base.light
 
         # Calculate close light range
-        comp = (6 -
-                (2 if base.quality is Quality.exotic else 0) +
-                (1 if target.quality is Quality.exotic else 0))
+        comp = 4 if base.quality is Quality.exotic else 6
 
         # Calculate far light percentage
         perc = 0.7 if base.quality is Quality.exotic else 0.8
@@ -90,7 +71,7 @@ class Path():
             return Item(target.light, base.quality)
         # Otherwise assess penalty
         else:
-            # Resulting light is calculated percentage of the difference
+            # Result is half-even rounded percentage of difference plus base
             return Item(base.light + round(diff * perc), base.quality)
 
     def __init__(self, steps):
