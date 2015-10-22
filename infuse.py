@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
-from infusion import Paths, Quality
+from infusion import Paths, Rarity
 
 
 # ANSI color enum
@@ -24,15 +24,15 @@ def printc(string, color=Color.white):
 
 
 def render(item):
-    """Render light with color based on quality"""
+    """Render light with color based on rarity"""
 
-    if not hasattr(item, 'quality'):
+    if not hasattr(item, 'rarity'):
         color = Color.red
-    elif item.quality is Quality.rare:
+    elif item.rarity is Rarity.rare:
         color = Color.cyan
-    elif item.quality is Quality.exotic:
+    elif item.rarity is Rarity.exotic:
         color = Color.yellow
-    else:  # item.quality is Quality.legendary
+    else:  # item.rarity is Rarity.legendary
         color = Color.purple
 
     return "{}{}{}".format(color, item, Color.term)

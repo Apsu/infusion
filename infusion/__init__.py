@@ -2,38 +2,38 @@ import functools
 import itertools
 
 
-# Item quality enum
-class Quality:
+# Item rarity enum
+class Rarity:
     rare = 1
     legendary = 2
     exotic = 3
 
 
 class Item():
-    """Item wrapper to store light/quality properties"""
+    """Item wrapper to store light/rarity properties"""
 
-    def __init__(self, item, quality=None):
-        """Extract light value and quality flag"""
+    def __init__(self, item, rarity=None):
+        """Extract light value and rarity flag"""
 
-        # Shortcut if quality flag is provided to streamline objects
-        if quality is not None:
-            self.quality = quality
+        # Shortcut if rarity flag is provided to streamline objects
+        if rarity is not None:
+            self.rarity = rarity
             self.light = item
             return
 
-        # Quality flag is based on '+' or '-' prefix or none
+        # Rarity flag is based on '+' or '-' prefix or none
         if item[0] == '+':
-            self.quality = Quality.exotic
+            self.rarity = Rarity.exotic
         elif item[0] == '-':
-            self.quality = Quality.rare
+            self.rarity = Rarity.rare
         else:
-            self.quality = Quality.legendary
+            self.rarity = Rarity.legendary
 
         # Make sure light is an integer
         try:
-            # Light is rest of string if quality provided, else whole string
+            # Light is rest of string if rarity provided, else whole string
             self.light = int(item[1:]
-                             if self.quality is not Quality.legendary
+                             if self.rarity is not Rarity.legendary
                              else item)
         # If item is not an integer
         except ValueError as e:
@@ -61,18 +61,18 @@ class Path():
         diff = target.light - base.light
 
         # Calculate close light range
-        comp = 4 if base.quality is Quality.exotic else 6
+        comp = 4 if base.rarity is Rarity.exotic else 6
 
         # Calculate far light percentage
-        perc = 0.7 if base.quality is Quality.exotic else 0.8
+        perc = 0.7 if base.rarity is Rarity.exotic else 0.8
 
         if diff <= comp:
             # No penalty, result is target light
-            return Item(target.light, base.quality)
+            return Item(target.light, base.rarity)
         # Otherwise assess penalty
         else:
             # Result is half-even rounded percentage of difference plus base
-            return Item(base.light + round(diff * perc), base.quality)
+            return Item(base.light + round(diff * perc), base.rarity)
 
     def __init__(self, steps):
         # Store steps and calculate cost
